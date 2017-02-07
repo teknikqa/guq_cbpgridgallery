@@ -1,0 +1,135 @@
+<?php
+/**
+ * Implements hook_block_info().
+ */
+function guq_cbpgridgallery_block_info() {
+  $blocks['guq_cbpgridgallery'] = array(
+    'info' => t('GUQ CBP-Grid Gallery'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function guq_cbpgridgallery_block_view($delta = '') {
+  $nid = 0;
+  $block = array();
+  if ($node = menu_get_object()) {
+    // Get the nid
+    $nid = $node->nid;
+    switch ($delta) {
+      case 'guq_cbpgridgallery':
+        $block['subject'] = '<none>';
+        $block['content'] = guq_cbpgridgallery_render($nid);
+        break;
+    }
+  }
+  return $block;
+}
+
+function guq_cbpgridgallery_render($nid) {
+  $nodes = guq_cbpgridgallery_fetch_nodes($nid);
+  $out = '<div class="frontpage-slider image-slider">';
+  $out .= '<div class="flexslider flexslider-processed">';
+  $out .= '<div class="flex-viewport" style="overflow: hidden; position: relative;">';
+  $out .= '<ul class="slides">';
+  dpm($nodes);
+  foreach ($nodes as $key) {
+    $node = node_load($key->nid);
+    $out .= '<li><a class="colorbox-node colorbox-node-gallery" href="/node/' . $key->nid . '?width=1000&height=600"  rel="gallery">';
+    $img = field_get_items('node', $node, 'field_image');
+    $style = 'image_slider__1320x620_';
+    $image_uri = image_style_url($style, $img[0]['uri']);
+    $out .= '<img src="' . $image_uri . '"';
+    $out .= '</a></li>';
+  }
+  $out .= '</ul></div>';
+  $out .= '<ul class="flex-direction-nav"><li><a class="flex-prev" href="#">Previous</a></li><li><a class="flex-next" href="#">Next</a></li></ul>';
+  $out .= '</div></div>';
+
+  drupal_add_js(drupal_get_path('module', 'flexslider') . '/assets/js/flexslider.load.js', array(
+    'scope' => 'footer',
+    'weight' => '18'
+  ));
+  drupal_add_css(drupal_get_path('module', 'flexslider') . '/assets/css/flexslider_img.css', array(
+    'group' => 'DEFAULT',
+    'type' => 'file'
+  ));
+  drupal_add_js('$(window).load(function() {$(".flexslider").flexslider();});', array(
+    'scope' => 'footer',
+    'weight' => '19'
+  ));
+  /*
+  $out = '<div id="grid-gallery" class="grid-gallery"><section class="grid-wrap"><ul class="grid"><li class="grid-sizer"></li>';
+  foreach ($nodes as $key) {
+    $node = node_load($key->nid);
+    $node->build_mode = 'guq_cbpgridgallery';
+    $view = node_view($node, 'guq_cbpgridgallery');
+    $rendered = drupal_render($view);
+    $out .= '<li>' . $rendered .  '</li>';
+  }
+  //$out .= '<li>' . 'Expand Gallery to full size' .  '</li>';
+  $out .= '</ul></section><!-- // grid-wrap --><section class="slideshow"><ul>';
+  foreach ($nodes as $key) {
+    $out .= '<li id="' . $key->nid . '" class="slideshow-panel">' . get_panel_view($key->nid) .  '</li>';
+  }
+  $out .= '</ul><nav><span class="icon nav-prev"></span><span class="icon nav-next"></span><span class="icon nav-close"></span></nav><div class="info-keys icon">Navigate with arrow keys</div></section><!-- // slideshow --></div>';
+
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/modernizr.custom.js', array(
+    'scope' => 'footer',
+    'weight' => '15'
+  ));
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/imagesloaded.pkgd.min.js', array(
+    'scope' => 'footer',
+    'weight' => '16'
+  ));
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/masonry.pkgd.min.js', array(
+    'scope' => 'footer',
+    'weight' => '17'
+  ));
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/classie.js', array(
+    'scope' => 'footer',
+    'weight' => '18'
+  ));
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/cbpGridGallery.js', array(
+    'scope' => 'footer',
+    'weight' => '19'
+  ));
+  drupal_add_js(drupal_get_path('module', 'guq_cbpgridgallery') . '/js/guq_cbpgridgallery.js', array(
+    'scope' => 'footer',
+    'weight' => '20'
+  ));*/
+  return $out;
+}
+
+function guq_cbpgridgallery_fetch_nodes($nid) {
+  return views_get_view_result('image_slider', 'img_slideshow_list', $nid);
+}
+
+function get_panel_view($node) {
+  $task = page_manager_get_task('node_view');
+
+  // Load the node into a context.
+  ctools_include('context');
+  ctools_include('context-task-handler');
+  $handlers = page_manager_load_sorted_handlers($task, '', TRUE);
+  $handler = $handlers['node_view__panel_context_62bdd9cc-ca21-4dc1-84ee-32afa0c21953'];
+  $contexts = ctools_context_handler_get_task_contexts($task, '', array($node));
+  $output = ctools_context_handler_render_handler($task,'',$handler, $contexts, array($node));
+  if (user_is_anonymous()){
+    return $output;
+  }
+  else return drupal_render($output);
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+ function guq_cbpgridgallery_entity_info_alter(&$entity_info) {
+   $entity_info['node']['view modes']['guq_cbpgridgallery'] = array(
+     'label' => t('GU-Q CBP Grid'),
+     'custom settings' => TRUE,
+   );
+ }

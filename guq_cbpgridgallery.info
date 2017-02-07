@@ -1,0 +1,16 @@
+name = GU-Q CBP Grid Gallery
+description = Slideshow using the Google Chromebook Pixel Grid Gallery effect.
+package = GU-Q
+core = 7.x
+
+dependencies[] = libraries
+;dependencies[] = views
+
+;scripts[] = js/imagesloaded.pkgd.min.js
+;scripts[] = js/masonry.pkgd.min.js
+;scripts[] = js/classie.js
+;scripts[] = js/cbpGridGallery.js
+;scripts[] = js/guq_cbpgridgallery.js
+
+stylesheets[all][] = css/guq_cbpcomponent.css
+stylesheets[all][] = css/guq_cbpgridgallery.css
